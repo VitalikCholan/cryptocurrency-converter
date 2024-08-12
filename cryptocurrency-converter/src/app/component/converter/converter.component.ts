@@ -13,7 +13,7 @@ export class ConverterComponent {
 
   constructor(private coinMarketCapService: CoinMarketCapService) {}
 
-  ngOnInit(): void {
+  OnInit(): void {
     this.coinMarketCapService.getCryptoData().subscribe(
       (data) => {
         this.cryptoData = data;
