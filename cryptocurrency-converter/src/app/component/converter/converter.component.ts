@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CoinMarketCapService } from '../service/coin-market-cap.service';
 
 @Component({
@@ -8,12 +8,12 @@ import { CoinMarketCapService } from '../service/coin-market-cap.service';
   templateUrl: './converter.component.html',
   styleUrl: './converter.component.css',
 })
-export class ConverterComponent {
-  cryptoData: any = [];
+export class ConverterComponent implements OnInit {
+  cryptoData: unknown = [];
 
   constructor(private coinMarketCapService: CoinMarketCapService) {}
 
-  OnInit(): void {
+  ngOnInit(): void {
     this.coinMarketCapService.getCryptoData().subscribe(
       (data) => {
         this.cryptoData = data;
