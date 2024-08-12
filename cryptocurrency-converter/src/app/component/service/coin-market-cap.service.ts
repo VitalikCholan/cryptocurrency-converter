@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class CoinMarketCapService {
-  private apiUrl: string = 'v2/cryptocurrency/quotes/latest?slug=bitcoin';
+  private apiUrl: string = 'v2/cryptocurrency/quotes/latest?symbol=BTC';
   private apiKey: string = 'dbaeffee-252c-4d88-b04e-e70106198aa8';
 
   constructor(private http: HttpClient) {}
