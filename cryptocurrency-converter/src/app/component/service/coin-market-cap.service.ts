@@ -6,16 +6,18 @@ import { Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class CoinMarketCapService {
-  private apiUrl: string = 'v2/cryptocurrency/quotes/latest?symbol=BTC';
+  private apiUrl: string = 'v2/cryptocurrency/quotes/latest';
   private apiKey: string = 'dbaeffee-252c-4d88-b04e-e70106198aa8';
 
   constructor(private http: HttpClient) {}
 
-  getCryptoData(): Observable<unknown> {
+  getCryptoData(slugs: string[]): Observable<unknown> {
     const headers = new HttpHeaders({
       'X-CMC_PRO_API_KEY': this.apiKey,
     });
-
-    return this.http.get(this.apiUrl, { headers });
+    const slugQuery = slugs.join(',');
+    return this.http.get<unknown>(`${this.apiUrl}?slug=${slugQuery}`, {
+      headers,
+    });
   }
 }

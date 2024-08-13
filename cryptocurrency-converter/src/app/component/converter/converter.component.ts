@@ -10,13 +10,14 @@ import { CoinMarketCapService } from '../service/coin-market-cap.service';
 })
 export class ConverterComponent implements OnInit {
   cryptoData: unknown = [];
+  selectedCryptos: string[] = ['bitcoin', 'ethereum', 'litecoin'];
 
   constructor(private coinMarketCapService: CoinMarketCapService) {}
 
   ngOnInit(): void {
-    this.coinMarketCapService.getCryptoData().subscribe(
-      (data) => {
-        this.cryptoData = data;
+    this.coinMarketCapService.getCryptoData(this.selectedCryptos).subscribe(
+      (response: any) => {
+        this.cryptoData = response.data;
         console.log(this.cryptoData);
       },
       (error) => {
