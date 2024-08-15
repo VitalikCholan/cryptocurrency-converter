@@ -1,7 +1,7 @@
 <form action="">
   <div class="crypto-value">
     <input type="number" value="1" />
-    <select>
+    <select (change)="onCryptoChange($event)">
       <ng-container>
         @for(crypto of cryptoData; track $index) {
         <option [value]="crypto.symbol">
@@ -36,7 +36,7 @@
     </button>
   </div>
   <div class="fiat-value">
-    <input type="number" value="" />
+    <input type="number" [value]="selectedPrice" />
     <select name="" id="">
       <option value="USD">US Dollar</option>
       <option value="EUR">Euro</option>
