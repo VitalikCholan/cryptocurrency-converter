@@ -36,7 +36,7 @@
     </button>
   </div>
   <div class="fiat-value">
-    <input type="number" [value]="selectedPrice" />
+    <input type="text" [value]="selectedPrice | number : '1.2-2'" />
     <select name="" id="">
       <option value="USD">US Dollar</option>
       <option value="EUR">Euro</option>

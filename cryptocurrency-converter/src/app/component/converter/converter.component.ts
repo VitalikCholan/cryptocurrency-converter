@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CoinMarketCapService } from '../service/coin-market-cap.service';
+import { DecimalPipe } from '@angular/common';
 
 type Quote = {
   USD: {
@@ -9,7 +10,7 @@ type Quote = {
 @Component({
   selector: 'app-converter',
   standalone: true,
-  imports: [],
+  imports: [DecimalPipe],
   templateUrl: './converter.component.html',
   styleUrl: './converter.component.css',
 })
@@ -42,7 +43,7 @@ export class ConverterComponent implements OnInit {
     );
 
     if (selectedCrypto) {
-      this.selectedPrice = selectedCrypto.quote?.USD?.price || 0;
+      this.selectedPrice = selectedCrypto.quote.USD.price || 0;
     }
   }
 }
