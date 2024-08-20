@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CoinMarketCapService } from '../service/coin-market-cap.service';
 import { DecimalPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 type Quote = {
   USD: {
@@ -10,20 +12,23 @@ type Quote = {
 @Component({
   selector: 'app-converter',
   standalone: true,
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, FormsModule, CommonModule],
   templateUrl: './converter.component.html',
   styleUrl: './converter.component.css',
 })
 export class ConverterComponent implements OnInit {
   cryptoData: { name: string; symbol: string; quote: Quote }[] = [];
-  selectedCryptos: string[] = ['bitcoin', 'ethereum', 'litecoin'];
+  selectedCryptos: string[] = [];
   selectedSymbol: string = '';
   cryptoQuantity: number = 1;
   calculatedPrice: number = 0;
+  searchTerm: string = '';
 
   constructor(private coinMarketCapService: CoinMarketCapService) {}
 
   ngOnInit(): void {
+    this.fetchCryptoData(['bitcoin']);
+
     this.coinMarketCapService.getCryptoData(this.selectedCryptos).subscribe(
       (response: any) => {
         this.cryptoData = Object.values(response.data);
@@ -73,6 +78,38 @@ export class ConverterComponent implements OnInit {
     if (selectedCrypto) {
       const price = selectedCrypto.quote.USD.price || 0;
       this.calculatedPrice = price * this.cryptoQuantity;
+    }
+  }
+
+  filteredCryptos() {
+    if (!this.searchTerm) {
+      return this.cryptoData;
+    }
+    return this.cryptoData.filter(
+      (crypto) =>
+        crypto.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        crypto.symbol.toLowerCase().includes(this.searchTerm.toLowerCase())
+    );
+  }
+
+  fetchCryptoData(slugs: string[]): void {
+    this.coinMarketCapService.getCryptoData(slugs).subscribe(
+      (response: any) => {
+        this.cryptoData = Object.values(response.data);
+        if (this.cryptoData.length > 0) {
+          this.selectedSymbol = this.cryptoData[0].symbol;
+          this.updatePrice();
+        }
+      },
+      (error) => {
+        console.error('There was an error fetching the data!', error);
+      }
+    );
+  }
+
+  onSearch(): void {
+    if (this.searchTerm) {
+      this.fetchCryptoData([this.searchTerm.toLowerCase()]);
     }
   }
 }

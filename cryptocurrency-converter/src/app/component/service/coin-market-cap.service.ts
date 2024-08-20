@@ -15,7 +15,7 @@ export class CoinMarketCapService {
     const headers = new HttpHeaders({
       'X-CMC_PRO_API_KEY': this.apiKey,
     });
-    const slugQuery = slugs.join(',');
+    const slugQuery = slugs.length ? slugs.join(',') : 'bitcoin';
     return this.http.get<unknown>(`${this.apiUrl}?slug=${slugQuery}`, {
       headers,
     });
