@@ -3,6 +3,10 @@ import { CoinMarketCapService } from '../service/coin-market-cap.service';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 type Quote = {
   USD: {
@@ -23,25 +27,25 @@ export class ConverterComponent implements OnInit {
   cryptoQuantity: number = 1;
   calculatedPrice: number = 0;
   searchTerm: string = '';
+  searchSubject: Subject<string> = new Subject<string>();
+  errorMessage: string = '';
 
   constructor(private coinMarketCapService: CoinMarketCapService) {}
 
   ngOnInit(): void {
-    this.fetchCryptoData(['bitcoin']);
-
-    this.coinMarketCapService.getCryptoData(this.selectedCryptos).subscribe(
-      (response: any) => {
-        this.cryptoData = Object.values(response.data);
-        console.log(this.cryptoData);
-        if (this.cryptoData.length > 0) {
-          this.selectedSymbol = this.cryptoData[0].symbol;
-          this.updatePrice(); // Calculate initial price
+    // Set up the search subject to handle debouncing and dynamic fetching
+    this.searchSubject
+      .pipe(
+        debounceTime(300), // wait for 300ms pause in events
+        distinctUntilChanged() // only emit if value is different from before
+      )
+      .subscribe((searchTerm: string) => {
+        if (searchTerm) {
+          this.fetchCryptoData([searchTerm.toLowerCase()]);
+        } else {
+          this.fetchCryptoData(['bitcoin']); // Default to Bitcoin if empty
         }
-      },
-      (error) => {
-        console.error('There was an error fetching the data!', error);
-      }
-    );
+      });
   }
 
   onCryptoChange(event: Event): void {
@@ -93,23 +97,30 @@ export class ConverterComponent implements OnInit {
   }
 
   fetchCryptoData(slugs: string[]): void {
-    this.coinMarketCapService.getCryptoData(slugs).subscribe(
-      (response: any) => {
+    this.coinMarketCapService
+      .getCryptoData(slugs)
+      .pipe(
+        catchError((error) => {
+          if (error.status === 400) {
+            this.errorMessage = 'No results found';
+            console.warn('Invalid slug, suppressing 400 error');
+          } else {
+            console.error('Error fetching data:', error);
+          }
+          return of([]); // Return an empty array to avoid breaking the app
+        })
+      )
+      .subscribe((response: any) => {
         this.cryptoData = Object.values(response.data);
         if (this.cryptoData.length > 0) {
           this.selectedSymbol = this.cryptoData[0].symbol;
+          this.errorMessage = '';
           this.updatePrice();
         }
-      },
-      (error) => {
-        console.error('There was an error fetching the data!', error);
-      }
-    );
+      });
   }
 
-  onSearch(): void {
-    if (this.searchTerm) {
-      this.fetchCryptoData([this.searchTerm.toLowerCase()]);
-    }
+  onSearchTermChange(): void {
+    this.searchSubject.next(this.searchTerm);
   }
 }

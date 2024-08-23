@@ -1,4 +1,4 @@
-<form (ngSubmit)="onSearch()">
+<form>
   <div class="crypto-value">
     <input
       type="number"
@@ -10,9 +10,14 @@
       placeholder="Search cryptocurrency..."
       [(ngModel)]="searchTerm"
       name="searchTerm"
+      (input)="onSearchTermChange()"
     />
-    <button type="submit">Search</button>
     <select (change)="onCryptoChange($event)">
+      @if(errorMessage) {
+      <option>
+        {{ errorMessage }}
+      </option>
+      } @else {
       <ng-container *ngFor="let crypto of filteredCryptos(); let i = index">
         @for(crypto of cryptoData; track $index) {
         <option [value]="crypto.symbol">
@@ -20,6 +25,7 @@
         </option>
         }
       </ng-container>
+      }
     </select>
   </div>
   <div>
