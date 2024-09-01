@@ -1,5 +1,5 @@
 {
-  "/v2": {
+  "/v1": {
     "target": "https://pro-api.coinmarketcap.com",
     "secure": false,
     "changeOrigin": true
