@@ -12,7 +12,7 @@
       name="searchTerm"
       (input)="onSearchTermChange()"
     />
-    <select (change)="onCryptoChange($event)">
+    <select (click)="onCryptoChange($event)">
       @if(errorMessage) {
       <option>
         {{ errorMessage }}

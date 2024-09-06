@@ -44,7 +44,7 @@ export class ConverterComponent implements OnInit {
       )
       .subscribe((searchTerm: string) => {
         if (searchTerm) {
-          this.fetchCryptoData(this.searchTerm.toLowerCase());
+          this.fetchCryptoData(searchTerm);
         }
       });
 
@@ -52,9 +52,9 @@ export class ConverterComponent implements OnInit {
   }
 
   onCryptoChange(event: Event): void {
-    const selectElement = event.target as HTMLSelectElement;
-    this.selectedSymbol = selectElement.value;
-    this.updatePrice();
+    const element = event.target as HTMLSelectElement;
+    this.selectedSymbol = element.value;
+    this.updatePrice(); // This method will now be responsible for updating the price.
   }
 
   onQuantityChange(event: Event): void {
@@ -99,11 +99,10 @@ export class ConverterComponent implements OnInit {
     );
   }
 
-  fetchCryptoData(searchTerm?: string): void {
+  fetchCryptoData(searchTerm: string = ''): void {
     const params = {
-      start: '1', // Start from the first item
-      limit: '50', // Limit to 100 results
-      convert: 'USD', // Convert market data to USD
+      limit: '50', // Limit to 50 results for the sake of performance
+      convert: 'USD', // Converting market data to USD
       sort: 'market_cap', // Sort by market cap
     };
 
@@ -117,17 +116,20 @@ export class ConverterComponent implements OnInit {
           } else {
             console.error('Error fetching data:', error);
           }
-          return of([]); // Return an empty array to avoid breaking the app
+          return of([]);
         })
       )
       .subscribe((response: any) => {
-        this.cryptoData = response.data || [];
-        if (this.cryptoData.length > 0) {
-          this.selectedSymbol = this.cryptoData[0].symbol;
-          this.errorMessage = '';
-          this.updatePrice();
-          console.log(this.cryptoData);
+        let data = response.data || [];
+        if (searchTerm) {
+          data = data.filter(
+            (crypto: any) =>
+              crypto.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              crypto.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+          );
         }
+        this.cryptoData = data;
+        this.errorMessage = '';
       });
   }
 
