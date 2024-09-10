@@ -18,8 +18,8 @@
         {{ errorMessage }}
       </option>
       } @else {
-      <ng-container *ngFor="let crypto of filteredCryptos(); let i = index">
-        @for(crypto of cryptoData; track $index) {
+      <ng-container>
+        @for(crypto of filteredCryptos(); track $index) {
         <option [value]="crypto.symbol">
           {{ crypto.symbol }} - {{ crypto.name }}
         </option>
