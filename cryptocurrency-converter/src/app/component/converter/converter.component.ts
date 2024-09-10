@@ -25,6 +25,9 @@ type Quote = {
 })
 export class ConverterComponent implements OnInit {
   cryptoData: { name: string; symbol: string; quote: Quote }[] = [];
+  cryptoDataMap: Map<string, { name: string; symbol: string; quote: Quote }> =
+    new Map();
+  displayedCryptos: { name: string; symbol: string; quote: Quote }[] = [];
   selectedCryptos: string[] = [];
   selectedSymbol: string = '';
   cryptoQuantity: number = 1;
@@ -90,18 +93,24 @@ export class ConverterComponent implements OnInit {
 
   filteredCryptos() {
     if (!this.searchTerm) {
-      return this.cryptoData;
+      return Array.from(this.cryptoDataMap.values()).slice(0, 10); // Return first 10 by default
     }
-    return this.cryptoData.filter(
-      (crypto) =>
-        crypto.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        crypto.symbol.toLowerCase().includes(this.searchTerm.toLowerCase())
-    );
+
+    const searchTermLower = this.searchTerm.toLowerCase();
+    // Filter the Map by name or symbol
+    return Array.from(this.cryptoDataMap.values())
+      .filter(
+        (crypto) =>
+          crypto.name.toLowerCase().includes(searchTermLower) ||
+          crypto.symbol.toLowerCase().includes(searchTermLower)
+      )
+      .slice(0, 10); // Limit to 10 results
   }
 
   fetchCryptoData(searchTerm: string = ''): void {
     const params = {
-      limit: '50', // Limit to 50 results for the sake of performance
+      start: 1,
+      limit: '5000',
       convert: 'USD', // Converting market data to USD
       sort: 'market_cap', // Sort by market cap
     };
@@ -120,15 +129,22 @@ export class ConverterComponent implements OnInit {
         })
       )
       .subscribe((response: any) => {
-        let data = response.data || [];
+        this.cryptoData = response.data || [];
+
         if (searchTerm) {
-          data = data.filter(
-            (crypto: any) =>
+          this.cryptoData = this.cryptoData.filter(
+            (crypto) =>
               crypto.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
               crypto.symbol.toLowerCase().includes(searchTerm.toLowerCase())
           );
         }
-        this.cryptoData = data;
+
+        // Create a Map for faster lookup
+        this.cryptoDataMap.clear(); // Clear the previous data
+        this.cryptoData.forEach((crypto) => {
+          this.cryptoDataMap.set(crypto.symbol, crypto);
+        });
+
         this.errorMessage = '';
       });
   }
