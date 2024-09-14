@@ -88,6 +88,8 @@ export class ConverterComponent implements OnInit {
     if (selectedCrypto) {
       const price = selectedCrypto.quote['USD'].price || 0;
       this.calculatedPrice = price * this.cryptoQuantity;
+    } else {
+      this.calculatedPrice = 0; // Handle case where selected symbol is not found
     }
   }
 
@@ -98,13 +100,17 @@ export class ConverterComponent implements OnInit {
 
     const searchTermLower = this.searchTerm.toLowerCase();
     // Filter the Map by name or symbol
-    return Array.from(this.cryptoDataMap.values())
-      .filter(
-        (crypto) =>
-          crypto.name.toLowerCase().includes(searchTermLower) ||
-          crypto.symbol.toLowerCase().includes(searchTermLower)
-      )
-      .slice(0, 10); // Limit to 10 results
+    const filtered = Array.from(this.cryptoDataMap.values()).filter(
+      (crypto) =>
+        crypto.name.toLowerCase().includes(searchTermLower) ||
+        crypto.symbol.toLowerCase().includes(searchTermLower)
+    );
+
+    if (filtered.length === 0) {
+      this.errorMessage = 'No results found.';
+    }
+
+    return filtered.slice(0, 10); // Limit to 10 results
   }
 
   fetchCryptoData(searchTerm: string = ''): void {
@@ -117,17 +123,6 @@ export class ConverterComponent implements OnInit {
 
     this.coinMarketCapService
       .getCryptoData(params)
-      .pipe(
-        catchError((error) => {
-          if (error.status === 400) {
-            this.errorMessage = 'No results found';
-            console.warn('Invalid name, suppressing 400 error');
-          } else {
-            console.error('Error fetching data:', error);
-          }
-          return of([]);
-        })
-      )
       .subscribe((response: any) => {
         this.cryptoData = response.data || [];
 
