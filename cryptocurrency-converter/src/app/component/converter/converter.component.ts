@@ -32,26 +32,28 @@ export class ConverterComponent implements OnInit {
   selectedSymbol: string = '';
   cryptoQuantity: number = 1;
   calculatedPrice: number = 0;
-  searchTerm: string = '';
-  searchSubject: Subject<string> = new Subject<string>();
+  searchCryptoTerm: string = '';
+  searchCryptoSubject: Subject<string> = new Subject<string>();
   errorMessage: string = '';
 
   constructor(private coinMarketCapService: CoinMarketCapService) {}
 
   ngOnInit(): void {
     // Set up the search subject to handle debouncing and dynamic fetching
-    this.searchSubject
+    this.searchCryptoSubject
       .pipe(
         debounceTime(300), // wait for 300ms pause in events
         distinctUntilChanged() // only emit if value is different from before
       )
-      .subscribe((searchTerm: string) => {
-        if (searchTerm) {
-          this.fetchCryptoData(searchTerm);
+      .subscribe((searchCryptoTerm: string) => {
+        if (searchCryptoTerm) {
+          this.fetchCryptoData(searchCryptoTerm);
         }
       });
 
     this.fetchCryptoData();
+
+    this.fetchFiatData();
   }
 
   onCryptoChange(event: Event): void {
@@ -94,16 +96,16 @@ export class ConverterComponent implements OnInit {
   }
 
   filteredCryptos() {
-    if (!this.searchTerm) {
+    if (!this.searchCryptoTerm) {
       return Array.from(this.cryptoDataMap.values()).slice(0, 10); // Return first 10 by default
     }
 
-    const searchTermLower = this.searchTerm.toLowerCase();
+    const searchCryptoTermLower = this.searchCryptoTerm.toLowerCase();
     // Filter the Map by name or symbol
     const filtered = Array.from(this.cryptoDataMap.values()).filter(
       (crypto) =>
-        crypto.name.toLowerCase().includes(searchTermLower) ||
-        crypto.symbol.toLowerCase().includes(searchTermLower)
+        crypto.name.toLowerCase().includes(searchCryptoTermLower) ||
+        crypto.symbol.toLowerCase().includes(searchCryptoTermLower)
     );
 
     if (filtered.length === 0) {
@@ -113,7 +115,7 @@ export class ConverterComponent implements OnInit {
     return filtered.slice(0, 10); // Limit to 10 results
   }
 
-  fetchCryptoData(searchTerm: string = ''): void {
+  fetchCryptoData(searchCryptoTerm: string = ''): void {
     const params = {
       start: 1,
       limit: '5000',
@@ -126,11 +128,15 @@ export class ConverterComponent implements OnInit {
       .subscribe((response: any) => {
         this.cryptoData = response.data || [];
 
-        if (searchTerm) {
+        if (searchCryptoTerm) {
           this.cryptoData = this.cryptoData.filter(
             (crypto) =>
-              crypto.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              crypto.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+              crypto.name
+                .toLowerCase()
+                .includes(searchCryptoTerm.toLowerCase()) ||
+              crypto.symbol
+                .toLowerCase()
+                .includes(searchCryptoTerm.toLowerCase())
           );
         }
 
@@ -144,7 +150,22 @@ export class ConverterComponent implements OnInit {
       });
   }
 
+  fetchFiatData(): void {
+    const fiatParams = {
+      start: 1,
+      limit: 97,
+      sort: 'id',
+      include_metals: true,
+    };
+
+    this.coinMarketCapService
+      .getFiatData(fiatParams)
+      .subscribe((response: any) => {
+        console.log(response);
+      });
+  }
+
   onSearchTermChange(): void {
-    this.searchSubject.next(this.searchTerm);
+    this.searchCryptoSubject.next(this.searchCryptoTerm);
   }
 }
