@@ -9,7 +9,7 @@
       type="text"
       placeholder="Search cryptocurrency..."
       [(ngModel)]="searchCryptoTerm"
-      name="searchTerm"
+      name="searchCryptoTerm"
       (input)="onSearchTermChange()"
     />
     <select (click)="onCryptoChange($event)">
@@ -58,11 +58,20 @@
       [value]="calculatedPrice | number : '1.2-2'"
       (input)="onPriceChange($event)"
     />
-    <select name="" id="">
-      <option value="USD">US Dollar</option>
-      <option value="EUR">Euro</option>
-      <option value="UAH">Ukrainian hryvnia</option>
-      <option value="GBP">British pound</option>
+    <input
+      type="text"
+      placeholder="Search fiat..."
+      [(ngModel)]="searchFiat"
+      name="searchFiat"
+      (input)="onSearchFiatChange()"
+    />
+    <select (click)="onFiatChange($event)">
+      <option *ngIf="errorFiatMessage">{{ errorFiatMessage }}</option>
+      <ng-container *ngIf="!errorFiatMessage">
+        <option *ngFor="let fiat of filteredFiats" [value]="fiat.symbol">
+          {{ fiat.symbol }} - {{ fiat.name }}
+        </option>
+      </ng-container>
     </select>
   </div>
 </form>

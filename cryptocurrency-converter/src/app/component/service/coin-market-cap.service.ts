@@ -1,7 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { catchError, Observable, of } from 'rxjs';
 
+interface FiatData {
+  id: number;
+  name: string;
+  symbol: string;
+}
 @Injectable({
   providedIn: 'root',
 })
@@ -31,7 +36,7 @@ export class CoinMarketCapService {
     });
   }
 
-  getFiatData(fiatParams?: any): Observable<any> {
+  getFiatData(fiatParams?: any): Observable<{ data: FiatData[] }> {
     const headers = new HttpHeaders({
       'X-CMC_PRO_API_KEY': this.apiKey,
     });
@@ -44,9 +49,17 @@ export class CoinMarketCapService {
       });
     }
 
-    return this.http.get<any>(this.apiFiatUrl, {
-      headers,
-      params: httpParams,
-    });
+    return this.http
+      .get<{ data: FiatData[] }>(this.apiFiatUrl, {
+        headers,
+        params: httpParams,
+      })
+      .pipe(
+        catchError((error) => {
+          console.error('Error fetching fiat currencies:', error);
+          // Return an empty array wrapped in an object to ensure correct typing
+          return of({ data: [] });
+        })
+      );
   }
 }
