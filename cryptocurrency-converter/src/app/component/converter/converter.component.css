@@ -1,0 +1,31 @@
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  appearance: textfield;
+}
+
+input {
+  letter-spacing: 0.2rem;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.quantity-crypto {
+  background-color: inherit;
+  border: 5px solid #ffffff;
+  border-radius: 25px;
+  color: #ffffff;
+  width: 300px;
+  font-size: clamp(2.5rem, 0.625rem + 5vw, 3.125rem);
+  padding-left: 0.5em;
+}
+
+.quantity-crypto:focus {
+  outline: none;
+}
