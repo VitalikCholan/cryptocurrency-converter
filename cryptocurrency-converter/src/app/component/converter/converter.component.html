@@ -8,10 +8,11 @@
     />
     <input
       type="text"
-      placeholder="Search cryptocurrency..."
+      placeholder="Search crypto..."
       [(ngModel)]="searchCryptoTerm"
       name="searchCryptoTerm"
       (input)="onSearchTermChange()"
+      class="search-crypto"
     />
     <select (click)="onCryptoChange($event)">
       @if(errorMessage) {
@@ -55,7 +56,7 @@
   </div>
   <div class="fiat-value">
     <input
-      type="text"
+      type="number"
       [value]="calculatedPrice | number : '1.2-2'"
       (input)="onPriceChange($event)"
     />
