@@ -1,3 +1,31 @@
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.crypto-value {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.btn {
+  position: absolute;
+  top: 50%; /* 50% from the top */
+  right: -40px;
+  transform: translate(-50%, -40%);
+}
+
+.fiat-value {
+  position: absolute;
+  bottom: 70px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
