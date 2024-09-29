@@ -4,13 +4,15 @@
       type="number"
       [value]="cryptoQuantity"
       (input)="onQuantityChange($event)"
+      class="quantity-crypto"
     />
     <input
       type="text"
-      placeholder="Search cryptocurrency..."
+      placeholder="Search crypto..."
       [(ngModel)]="searchCryptoTerm"
       name="searchCryptoTerm"
       (input)="onSearchTermChange()"
+      class="search-crypto"
     />
     <select (click)="onCryptoChange($event)">
       @if(errorMessage) {
@@ -28,12 +30,12 @@
       }
     </select>
   </div>
-  <div>
-    <button>
+  <div class="btn">
+    <button class="switch-btn">
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
+        width="36"
+        height="36"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -42,6 +44,7 @@
         stroke-linejoin="round"
         class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-transfer-down"
       >
+        >
         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
         <path d="M17 3v6" />
         <path d="M10 18l-3 3l-3 -3" />
@@ -54,7 +57,7 @@
   </div>
   <div class="fiat-value">
     <input
-      type="text"
+      type="number"
       [value]="calculatedPrice | number : '1.2-2'"
       (input)="onPriceChange($event)"
     />
