@@ -8,11 +8,6 @@ import { catchError, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 type Quote = {
   [key: string]: {
     price: number;
-    volume_24h: number;
-    percent_change_1h: number;
-    percent_change_24h: number;
-    percent_change_7d: number;
-    market_cap: number;
   };
 };
 
@@ -43,7 +38,8 @@ export class ConverterComponent implements OnInit {
   fiatCurrencies: FiatCurrency[] = [];
   filteredFiats: FiatCurrency[] = [];
   selectedFiat: string = 'USD';
-  searchFiat: string = '';
+  searchFiatTerm: string = '';
+  searchFiatSubject: Subject<string> = new Subject<string>();
   errorFiatMessage: string = '';
 
   constructor(private coinMarketCapService: CoinMarketCapService) {}
@@ -58,6 +54,17 @@ export class ConverterComponent implements OnInit {
       .subscribe((searchCryptoTerm: string) => {
         if (searchCryptoTerm) {
           this.fetchCryptoData(searchCryptoTerm);
+        }
+      });
+
+    this.searchFiatSubject
+      .pipe(
+        debounceTime(300), // wait for 300ms pause in events
+        distinctUntilChanged() // only emit if value is different from before
+      )
+      .subscribe((searchFiatTerm: string) => {
+        if (searchFiatTerm) {
+          this.fetchFiatCurrencies();
         }
       });
 
@@ -81,13 +88,26 @@ export class ConverterComponent implements OnInit {
   onPriceChange(event: Event): void {
     const inputElement = event.target as HTMLInputElement;
     const newPrice = +inputElement.value;
-    if (this.selectedSymbol) {
+
+    if (this.selectedSymbol && this.selectedFiat) {
+      // Find the selected cryptocurrency
       const selectedCrypto = this.cryptoData.find(
         (crypto) => crypto.symbol === this.selectedSymbol
       );
-      if (selectedCrypto) {
+
+      if (selectedCrypto && selectedCrypto.quote[this.selectedFiat]) {
+        // Get the price per unit in the selected fiat currency
         const pricePerUnit = selectedCrypto.quote[this.selectedFiat].price || 0;
-        this.cryptoQuantity = newPrice / pricePerUnit;
+
+        if (pricePerUnit > 0) {
+          // Calculate the crypto quantity based on the price input
+          this.cryptoQuantity = newPrice / pricePerUnit;
+        } else {
+          this.cryptoQuantity = 0; // If no valid price, set quantity to 0
+        }
+
+        // Update calculatedPrice to reflect the current crypto quantity
+        this.calculatedPrice = this.cryptoQuantity * pricePerUnit;
       }
     }
   }
@@ -97,17 +117,23 @@ export class ConverterComponent implements OnInit {
       (crypto) => crypto.symbol === this.selectedSymbol
     );
 
-    if (selectedCrypto) {
+    if (
+      selectedCrypto &&
+      selectedCrypto.quote &&
+      selectedCrypto.quote[this.selectedFiat]
+    ) {
+      // Only access the price if selectedCrypto, quote, and the selectedFiat exist
       const price = selectedCrypto.quote[this.selectedFiat].price || 0;
       this.calculatedPrice = price * this.cryptoQuantity;
     } else {
-      this.calculatedPrice = 0; // Handle case where selected symbol is not found
+      // Handle cases where selectedCrypto or quote for the selected fiat does not exist
+      this.calculatedPrice = 0;
     }
   }
 
   filteredCryptos() {
     if (!this.searchCryptoTerm) {
-      return Array.from(this.cryptoDataMap.values()).slice(0, 10); // Return first 10 by default
+      return Array.from(this.cryptoDataMap.values()).slice(0, 4); // Return first 4 by default
     }
 
     const searchCryptoTermLower = this.searchCryptoTerm.toLowerCase();
@@ -119,22 +145,23 @@ export class ConverterComponent implements OnInit {
     );
 
     if (filtered.length === 0) {
-      this.errorMessage = 'No results found.';
+      this.errorMessage = 'No crypto found.';
     }
 
-    return filtered.slice(0, 10);
+    return filtered.slice(0, 4);
   }
 
   onFiatChange(event: Event): void {
     const element = event.target as HTMLSelectElement;
     this.selectedFiat = element.value;
-    this.fetchCryptoData();
+    this.fetchCryptoData(this.searchCryptoTerm);
+    this.updatePrice();
   }
 
   fetchCryptoData(searchCryptoTerm: string = ''): void {
     const params = {
       start: 1,
-      limit: '5000',
+      limit: '10',
       convert: this.selectedFiat,
       sort: 'market_cap',
     };
@@ -163,13 +190,15 @@ export class ConverterComponent implements OnInit {
         });
 
         this.errorMessage = '';
+
+        this.updatePrice();
       });
   }
 
   fetchFiatCurrencies(): void {
     const params = {
       start: 1,
-      limit: '97',
+      limit: '10',
       sort: 'id',
       include_metals: true,
     };
@@ -184,12 +213,12 @@ export class ConverterComponent implements OnInit {
       )
       .subscribe((response) => {
         this.fiatCurrencies = response.data || [];
-        this.filteredFiats = this.fiatCurrencies.slice(0, 10);
+        this.filteredFiats = this.fiatCurrencies.slice(0, 4);
       });
   }
 
   filterFiatCurrencies(): void {
-    const searchFiatLower = this.searchFiat.toLowerCase();
+    const searchFiatLower = this.searchFiatTerm.toLowerCase();
     this.filteredFiats = this.fiatCurrencies.filter(
       (fiat) =>
         fiat.name.toLowerCase().includes(searchFiatLower) ||
@@ -205,7 +234,7 @@ export class ConverterComponent implements OnInit {
 
   // Handle search input changes for fiat currencies
   onSearchFiatChange(): void {
-    this.filterFiatCurrencies();
+    this.searchFiatSubject.next(this.searchFiatTerm); // Emit value to Subject
   }
 
   onSearchTermChange(): void {

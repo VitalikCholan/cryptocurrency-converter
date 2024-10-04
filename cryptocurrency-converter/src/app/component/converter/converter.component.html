@@ -2,6 +2,7 @@
   <div class="crypto-value">
     <input
       type="number"
+      name="cryptoQuantity"
       [value]="cryptoQuantity"
       (input)="onQuantityChange($event)"
       class="quantity-crypto"
@@ -44,7 +45,6 @@
         stroke-linejoin="round"
         class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-transfer-down"
       >
-        >
         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
         <path d="M17 3v6" />
         <path d="M10 18l-3 3l-3 -3" />
@@ -57,14 +57,16 @@
   </div>
   <div class="fiat-value">
     <input
-      type="number"
+      type="text"
+      name="calculatedPrice"
       [value]="calculatedPrice | number : '1.2-2'"
       (input)="onPriceChange($event)"
     />
     <input
       type="text"
+      name="searchFiat"
       placeholder="Search fiat..."
-      [(ngModel)]="searchFiat"
+      [(ngModel)]="searchFiatTerm"
       name="searchFiat"
       (input)="onSearchFiatChange()"
     />
