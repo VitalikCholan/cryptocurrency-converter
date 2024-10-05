@@ -81,6 +81,20 @@ input[type="text"] {
   color: #ffffff;
 }
 
+.select-crypto {
+  background-color: inherit;
+  border: 5px solid #ffffff;
+  border-radius: 25px;
+  color: #ffffff;
+  width: 380px;
+  font-size: 1.5rem;
+  padding: 0.2em 0.5em;
+}
+
+.select-crypto:focus {
+  outline: none;
+}
+
 .switch-btn {
   color: #0037ff;
   background-color: #ffffff;
@@ -88,4 +102,50 @@ input[type="text"] {
   border-radius: 10px;
   margin: 2em;
   box-shadow: 0px 0px 15px 5px rgba(0, 0, 0, 0.35);
+}
+
+.price-crypto {
+  background-color: inherit;
+  border: 5px solid #0037ff;
+  border-radius: 25px;
+  color: #0037ff;
+  width: 350px;
+  font-size: clamp(2.5rem, 0.625rem + 5vw, 3.125rem);
+  padding-left: 0.5em;
+}
+
+.price-crypto:focus {
+  outline: none;
+}
+
+.search-fiat {
+  background-color: inherit;
+  border: 5px solid #0037ff;
+  border-radius: 25px;
+  color: #0037ff;
+  width: 350px;
+  font-size: clamp(2.5rem, 0.625rem + 5vw, 3.125rem);
+  padding-left: 0.5em;
+}
+
+.search-fiat::placeholder {
+  color: #0037ff;
+}
+
+.search-fiat:focus {
+  outline: none;
+}
+
+.select-fiat {
+  background-color: inherit;
+  border: 5px solid #0037ff;
+  border-radius: 25px;
+  color: #0037ff;
+  width: 380px;
+  font-size: 1.5rem;
+  padding: 0.2em 0.5em;
+}
+
+.select-fiat:focus {
+  outline: none;
 }

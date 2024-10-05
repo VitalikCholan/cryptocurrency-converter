@@ -145,7 +145,7 @@ export class ConverterComponent implements OnInit {
     );
 
     if (filtered.length === 0) {
-      this.errorMessage = 'No crypto found.';
+      this.errorMessage = 'No crypto found';
     }
 
     return filtered.slice(0, 4);
