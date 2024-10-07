@@ -49,6 +49,10 @@ input[type="text"] {
   font-size: 2rem;
 }
 
+.crypto-value {
+  position: relative;
+}
+
 .quantity-crypto {
   background-color: inherit;
   border: 5px solid #ffffff;
@@ -89,10 +93,50 @@ input[type="text"] {
   width: 380px;
   font-size: 1.5rem;
   padding: 0.2em 0.5em;
+  appearance: none;
 }
 
 .select-crypto:focus {
   outline: none;
+}
+
+.select-crypto option {
+  color: #0037ff;
+}
+
+.custom-arrow-crypto {
+  position: absolute;
+  bottom: 1px;
+  right: 10px;
+  display: block;
+  width: 2em;
+  height: 25%;
+  pointer-events: none;
+}
+
+.custom-arrow-crypto::before,
+.custom-arrow-crypto::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.custom-arrow-crypto::before {
+  border-left: 0.5em solid transparent;
+  border-right: 0.5em solid transparent;
+  border-bottom: 0.5em solid #ffffff;
+  top: 25%;
+}
+
+.custom-arrow-crypto::after {
+  border-left: 0.5em solid transparent;
+  border-right: 0.5em solid transparent;
+  border-top: 0.5em solid #ffffff;
+  top: 70%;
 }
 
 .switch-btn {
