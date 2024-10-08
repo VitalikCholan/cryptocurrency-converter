@@ -15,7 +15,7 @@
       (input)="onSearchTermChange()"
       class="search-crypto"
     />
-    <select (click)="onCryptoChange($event)">
+    <select (click)="onCryptoChange($event)" class="select-crypto">
       @if(errorMessage) {
       <option>
         {{ errorMessage }}
@@ -30,6 +30,7 @@
       </ng-container>
       }
     </select>
+    <span class="custom-arrow-crypto"></span>
   </div>
   <div class="btn">
     <button class="switch-btn">
@@ -61,6 +62,7 @@
       name="calculatedPrice"
       [value]="calculatedPrice | number : '1.2-2'"
       (input)="onPriceChange($event)"
+      class="price-crypto"
     />
     <input
       type="text"
@@ -69,8 +71,9 @@
       [(ngModel)]="searchFiatTerm"
       name="searchFiat"
       (input)="onSearchFiatChange()"
+      class="search-fiat"
     />
-    <select (click)="onFiatChange($event)">
+    <select (click)="onFiatChange($event)" class="select-fiat">
       <option *ngIf="errorFiatMessage">{{ errorFiatMessage }}</option>
       <ng-container *ngIf="!errorFiatMessage">
         <option *ngFor="let fiat of filteredFiats" [value]="fiat.symbol">
@@ -78,5 +81,6 @@
         </option>
       </ng-container>
     </select>
+    <span class="custom-arrow-fiat"></span>
   </div>
 </form>
