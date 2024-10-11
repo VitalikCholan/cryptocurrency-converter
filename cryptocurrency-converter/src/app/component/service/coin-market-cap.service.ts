@@ -2,10 +2,26 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, Observable, of } from 'rxjs';
 
+interface CryptoData {
+  [key: string]: string | number;
+  convert: string;
+  limit: string;
+  sort: string;
+  start: number;
+}
+
 interface FiatData {
   id: number;
   name: string;
   symbol: string;
+}
+
+interface FiatParameters {
+  [key: string]: string | number | boolean;
+  include_metals: boolean;
+  limit: string;
+  sort: string;
+  start: number;
 }
 @Injectable({
   providedIn: 'root',
@@ -17,7 +33,7 @@ export class CoinMarketCapService {
 
   constructor(private http: HttpClient) {}
 
-  getCryptoData(cryptoParams?: any): Observable<any> {
+  getCryptoData(cryptoParams?: CryptoData): Observable<CryptoData> {
     const headers = new HttpHeaders({
       'X-CMC_PRO_API_KEY': this.apiKey,
     });
@@ -30,13 +46,21 @@ export class CoinMarketCapService {
       });
     }
 
-    return this.http.get<any>(this.apiCryptoUrl, {
-      headers,
-      params: httpParams,
-    });
+    return this.http
+      .get<CryptoData>(this.apiCryptoUrl, {
+        headers,
+        params: httpParams,
+      })
+      .pipe(
+        catchError((error) => {
+          console.error('Error fetching cryptocurrency data:', error);
+          // Return a default value or handle the error accordingly
+          return of({ convert: '', limit: '', sort: '', start: 0 });
+        })
+      );
   }
 
-  getFiatData(fiatParams?: any): Observable<{ data: FiatData[] }> {
+  getFiatData(fiatParams?: FiatParameters): Observable<{ data: FiatData[] }> {
     const headers = new HttpHeaders({
       'X-CMC_PRO_API_KEY': this.apiKey,
     });
@@ -45,7 +69,7 @@ export class CoinMarketCapService {
 
     if (fiatParams) {
       Object.keys(fiatParams).forEach((key) => {
-        httpParams = httpParams.set(key, fiatParams[key]);
+        httpParams = httpParams.set(key, String(fiatParams[key]));
       });
     }
 
