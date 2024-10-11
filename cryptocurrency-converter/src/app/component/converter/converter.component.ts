@@ -206,7 +206,6 @@ export class ConverterComponent implements OnInit {
       .getFiatData(params)
       .pipe(
         catchError((error) => {
-          this.errorFiatMessage = 'Error fetching fiat currencies.';
           console.error(error);
           return of({ data: [] });
         })
@@ -234,7 +233,7 @@ export class ConverterComponent implements OnInit {
 
   // Handle search input changes for fiat currencies
   onSearchFiatChange(): void {
-    this.searchFiatSubject.next(this.searchFiatTerm); // Emit value to Subject
+    this.filterFiatCurrencies(); // Emit value to Subject
   }
 
   onSearchTermChange(): void {
