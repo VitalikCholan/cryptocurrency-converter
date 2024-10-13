@@ -10,6 +10,18 @@ interface CryptoData {
   start: number;
 }
 
+interface CryptoResponseData {
+  name: string;
+  symbol: string;
+  quote: Quote;
+}
+
+interface Quote {
+  [key: string]: {
+    price: number;
+  };
+}
+
 interface FiatData {
   id: number;
   name: string;
@@ -33,34 +45,32 @@ export class CoinMarketCapService {
 
   constructor(private http: HttpClient) {}
 
-  getCryptoData(cryptoParams?: CryptoData): Observable<CryptoData> {
+  getCryptoData(
+    cryptoParams: CryptoData
+  ): Observable<{ data: CryptoResponseData[] }> {
     const headers = new HttpHeaders({
       'X-CMC_PRO_API_KEY': this.apiKey,
     });
 
     let httpParams = new HttpParams();
-
-    if (cryptoParams) {
-      Object.keys(cryptoParams).forEach((key) => {
-        httpParams = httpParams.set(key, cryptoParams[key]);
-      });
-    }
+    Object.keys(cryptoParams).forEach((key) => {
+      httpParams = httpParams.set(key, cryptoParams[key]);
+    });
 
     return this.http
-      .get<CryptoData>(this.apiCryptoUrl, {
+      .get<{ data: CryptoResponseData[] }>(this.apiCryptoUrl, {
         headers,
         params: httpParams,
       })
       .pipe(
         catchError((error) => {
           console.error('Error fetching cryptocurrency data:', error);
-          // Return a default value or handle the error accordingly
-          return of({ convert: '', limit: '', sort: '', start: 0 });
+          return of({ data: [] }); // Return an empty array on error
         })
       );
   }
 
-  getFiatData(fiatParams?: FiatParameters): Observable<{ data: FiatData[] }> {
+  getFiatData(fiatParams: FiatParameters): Observable<{ data: FiatData[] }> {
     const headers = new HttpHeaders({
       'X-CMC_PRO_API_KEY': this.apiKey,
     });

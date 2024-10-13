@@ -166,33 +166,29 @@ export class ConverterComponent implements OnInit {
       sort: 'market_cap',
     };
 
-    this.coinMarketCapService
-      .getCryptoData(params)
-      .subscribe((response: any) => {
-        this.cryptoData = response.data || [];
+    this.coinMarketCapService.getCryptoData(params).subscribe((response) => {
+      this.cryptoData = response.data || [];
 
-        if (searchCryptoTerm) {
-          this.cryptoData = this.cryptoData.filter(
-            (crypto) =>
-              crypto.name
-                .toLowerCase()
-                .includes(searchCryptoTerm.toLowerCase()) ||
-              crypto.symbol
-                .toLowerCase()
-                .includes(searchCryptoTerm.toLowerCase())
-          );
-        }
+      if (searchCryptoTerm) {
+        this.cryptoData = this.cryptoData.filter(
+          (crypto) =>
+            crypto.name
+              .toLowerCase()
+              .includes(searchCryptoTerm.toLowerCase()) ||
+            crypto.symbol.toLowerCase().includes(searchCryptoTerm.toLowerCase())
+        );
+      }
 
-        // Create a Map for faster lookup
-        this.cryptoDataMap.clear(); // Clear the previous data
-        this.cryptoData.forEach((crypto) => {
-          this.cryptoDataMap.set(crypto.symbol, crypto);
-        });
-
-        this.errorMessage = '';
-
-        this.updatePrice();
+      // Create a Map for faster lookup
+      this.cryptoDataMap.clear(); // Clear the previous data
+      this.cryptoData.forEach((crypto) => {
+        this.cryptoDataMap.set(crypto.symbol, crypto);
       });
+
+      this.errorMessage = '';
+
+      this.updatePrice();
+    });
   }
 
   fetchFiatCurrencies(): void {
