@@ -42,6 +42,8 @@ export class ConverterComponent implements OnInit {
   searchFiatSubject: Subject<string> = new Subject<string>();
   errorFiatMessage: string = '';
 
+  isLoading: boolean = false;
+
   constructor(private coinMarketCapService: CoinMarketCapService) {}
 
   ngOnInit(): void {
@@ -154,6 +156,7 @@ export class ConverterComponent implements OnInit {
   onFiatChange(event: Event): void {
     const element = event.target as HTMLSelectElement;
     this.selectedFiat = element.value;
+    this.isLoading = true;
     this.fetchCryptoData(this.searchCryptoTerm);
     this.updatePrice();
   }
@@ -188,6 +191,8 @@ export class ConverterComponent implements OnInit {
       this.errorMessage = '';
 
       this.updatePrice();
+
+      this.isLoading = false;
     });
   }
 
