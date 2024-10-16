@@ -33,7 +33,10 @@
     <span class="custom-arrow-crypto"></span>
   </div>
   <div class="btn">
-    <button class="switch-btn">
+    <button
+      (click)="switchConversionValues(); $event.preventDefault()"
+      class="switch-btn"
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="36"

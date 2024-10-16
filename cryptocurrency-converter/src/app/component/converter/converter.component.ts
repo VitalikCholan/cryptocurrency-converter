@@ -240,4 +240,22 @@ export class ConverterComponent implements OnInit {
   onSearchTermChange(): void {
     this.searchCryptoSubject.next(this.searchCryptoTerm);
   }
+
+  switchConversionValues(): void {
+    // Swap the currencies
+    const tempFiat = this.selectedFiat;
+    const tempCrypto = this.selectedCryptos[0];
+
+    // Ensure you are swapping correctly and handling types properly
+    this.selectedFiat = tempCrypto; // Assign the first crypto as the new fiat
+    this.selectedCryptos = [tempFiat]; // Assign the old fiat as the selected crypto
+
+    // Swap the quantities
+    const tempQuantity = this.cryptoQuantity;
+    this.cryptoQuantity = this.calculatedPrice; // Old price becomes new quantity
+    this.calculatedPrice = tempQuantity; // Old quantity becomes new price
+
+    // Force update the price based on the newly swapped values
+    this.updatePrice();
+  }
 }
