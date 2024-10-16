@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { catchError, Observable, of } from 'rxjs';
+import { catchError, Observable, of, forkJoin } from 'rxjs';
 
 interface CryptoData {
   [key: string]: string | number;
@@ -8,6 +8,18 @@ interface CryptoData {
   limit: string;
   sort: string;
   start: number;
+}
+
+interface CryptoResponseData {
+  name: string;
+  symbol: string;
+  quote: Quote;
+}
+
+interface Quote {
+  [key: string]: {
+    price: number;
+  };
 }
 
 interface FiatData {
@@ -33,34 +45,32 @@ export class CoinMarketCapService {
 
   constructor(private http: HttpClient) {}
 
-  getCryptoData(cryptoParams?: CryptoData): Observable<CryptoData> {
+  getCryptoData(
+    cryptoParams: CryptoData
+  ): Observable<{ data: CryptoResponseData[] }> {
     const headers = new HttpHeaders({
       'X-CMC_PRO_API_KEY': this.apiKey,
     });
 
     let httpParams = new HttpParams();
-
-    if (cryptoParams) {
-      Object.keys(cryptoParams).forEach((key) => {
-        httpParams = httpParams.set(key, cryptoParams[key]);
-      });
-    }
+    Object.keys(cryptoParams).forEach((key) => {
+      httpParams = httpParams.set(key, cryptoParams[key]);
+    });
 
     return this.http
-      .get<CryptoData>(this.apiCryptoUrl, {
+      .get<{ data: CryptoResponseData[] }>(this.apiCryptoUrl, {
         headers,
         params: httpParams,
       })
       .pipe(
         catchError((error) => {
           console.error('Error fetching cryptocurrency data:', error);
-          // Return a default value or handle the error accordingly
-          return of({ convert: '', limit: '', sort: '', start: 0 });
+          return of({ data: [] }); // Return an empty array on error
         })
       );
   }
 
-  getFiatData(fiatParams?: FiatParameters): Observable<{ data: FiatData[] }> {
+  getFiatData(fiatParams: FiatParameters): Observable<{ data: FiatData[] }> {
     const headers = new HttpHeaders({
       'X-CMC_PRO_API_KEY': this.apiKey,
     });

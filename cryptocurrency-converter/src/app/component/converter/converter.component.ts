@@ -42,6 +42,8 @@ export class ConverterComponent implements OnInit {
   searchFiatSubject: Subject<string> = new Subject<string>();
   errorFiatMessage: string = '';
 
+  isLoading: boolean = false;
+
   constructor(private coinMarketCapService: CoinMarketCapService) {}
 
   ngOnInit(): void {
@@ -154,6 +156,7 @@ export class ConverterComponent implements OnInit {
   onFiatChange(event: Event): void {
     const element = event.target as HTMLSelectElement;
     this.selectedFiat = element.value;
+    this.isLoading = true;
     this.fetchCryptoData(this.searchCryptoTerm);
     this.updatePrice();
   }
@@ -166,33 +169,31 @@ export class ConverterComponent implements OnInit {
       sort: 'market_cap',
     };
 
-    this.coinMarketCapService
-      .getCryptoData(params)
-      .subscribe((response: any) => {
-        this.cryptoData = response.data || [];
+    this.coinMarketCapService.getCryptoData(params).subscribe((response) => {
+      this.cryptoData = response.data || [];
 
-        if (searchCryptoTerm) {
-          this.cryptoData = this.cryptoData.filter(
-            (crypto) =>
-              crypto.name
-                .toLowerCase()
-                .includes(searchCryptoTerm.toLowerCase()) ||
-              crypto.symbol
-                .toLowerCase()
-                .includes(searchCryptoTerm.toLowerCase())
-          );
-        }
+      if (searchCryptoTerm) {
+        this.cryptoData = this.cryptoData.filter(
+          (crypto) =>
+            crypto.name
+              .toLowerCase()
+              .includes(searchCryptoTerm.toLowerCase()) ||
+            crypto.symbol.toLowerCase().includes(searchCryptoTerm.toLowerCase())
+        );
+      }
 
-        // Create a Map for faster lookup
-        this.cryptoDataMap.clear(); // Clear the previous data
-        this.cryptoData.forEach((crypto) => {
-          this.cryptoDataMap.set(crypto.symbol, crypto);
-        });
-
-        this.errorMessage = '';
-
-        this.updatePrice();
+      // Create a Map for faster lookup
+      this.cryptoDataMap.clear(); // Clear the previous data
+      this.cryptoData.forEach((crypto) => {
+        this.cryptoDataMap.set(crypto.symbol, crypto);
       });
+
+      this.errorMessage = '';
+
+      this.updatePrice();
+
+      this.isLoading = false;
+    });
   }
 
   fetchFiatCurrencies(): void {
@@ -238,5 +239,23 @@ export class ConverterComponent implements OnInit {
 
   onSearchTermChange(): void {
     this.searchCryptoSubject.next(this.searchCryptoTerm);
+  }
+
+  switchConversionValues(): void {
+    // Swap the currencies
+    const tempFiat = this.selectedFiat;
+    const tempCrypto = this.selectedCryptos[0];
+
+    // Ensure you are swapping correctly and handling types properly
+    this.selectedFiat = tempCrypto; // Assign the first crypto as the new fiat
+    this.selectedCryptos = [tempFiat]; // Assign the old fiat as the selected crypto
+
+    // Swap the quantities
+    const tempQuantity = this.cryptoQuantity;
+    this.cryptoQuantity = this.calculatedPrice; // Old price becomes new quantity
+    this.calculatedPrice = tempQuantity; // Old quantity becomes new price
+
+    // Force update the price based on the newly swapped values
+    this.updatePrice();
   }
 }
