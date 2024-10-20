@@ -164,7 +164,7 @@ export class ConverterComponent implements OnInit {
   fetchCryptoData(searchCryptoTerm: string = ''): void {
     const params = {
       start: 1,
-      limit: '10',
+      limit: '100',
       convert: this.selectedFiat,
       sort: 'market_cap',
     };

@@ -63,7 +63,13 @@
     <input
       type="text"
       name="calculatedPrice"
-      [value]="isLoading ? 'Loading...' : (calculatedPrice | number : '1.2-2')"
+      [value]="
+        isLoading
+          ? 'Loading...'
+          : calculatedPrice > 1
+          ? (calculatedPrice | number : '1.1-2')
+          : (calculatedPrice | number : '1.1-6')
+      "
       (input)="onPriceChange($event)"
       class="price-crypto"
     />
