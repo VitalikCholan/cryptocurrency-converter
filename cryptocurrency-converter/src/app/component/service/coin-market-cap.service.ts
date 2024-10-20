@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { catchError, Observable, of, forkJoin } from 'rxjs';
+import { catchError, Observable, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 interface CryptoData {
   [key: string]: string | number;
@@ -41,7 +42,8 @@ interface FiatParameters {
 export class CoinMarketCapService {
   private apiCryptoUrl: string = '/v1/cryptocurrency/listings/latest';
   private apiFiatUrl: string = '/v1/fiat/map';
-  private apiKey: string = 'dbaeffee-252c-4d88-b04e-e70106198aa8';
+  // private apiKey: string = 'dbaeffee-252c-4d88-b04e-e70106198aa8';
+  private apiKey: string = environment.apiKey;
 
   constructor(private http: HttpClient) {}
 
