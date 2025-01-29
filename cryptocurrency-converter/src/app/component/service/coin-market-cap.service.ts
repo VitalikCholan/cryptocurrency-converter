@@ -40,18 +40,33 @@ interface FiatParameters {
   providedIn: 'root',
 })
 export class CoinMarketCapService {
-  private apiCryptoUrl: string = '/v1/cryptocurrency/listings/latest';
-  private apiFiatUrl: string = '/v1/fiat/map';
-  // private apiKey: string = 'dbaeffee-252c-4d88-b04e-e70106198aa8';
+  private baseUrl: string = 'https://pro-api.coinmarketcap.com';
+  private apiCryptoUrl: string;
+  private apiFiatUrl: string;
   private apiKey: string = environment.apiKey;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    // Check if running as extension
+    const isExtension =
+      (window as any).chrome &&
+      (window as any).chrome.runtime &&
+      (window as any).chrome.runtime.id;
+    if (isExtension) {
+      this.apiCryptoUrl = `${this.baseUrl}/v1/cryptocurrency/listings/latest`;
+      this.apiFiatUrl = `${this.baseUrl}/v1/fiat/map`;
+    } else {
+      // Development mode with proxy
+      this.apiCryptoUrl = '/v1/cryptocurrency/listings/latest';
+      this.apiFiatUrl = '/v1/fiat/map';
+    }
+  }
 
   getCryptoData(
     cryptoParams: CryptoData
   ): Observable<{ data: CryptoResponseData[] }> {
     const headers = new HttpHeaders({
       'X-CMC_PRO_API_KEY': this.apiKey,
+      Accept: 'application/json',
     });
 
     let httpParams = new HttpParams();
@@ -67,7 +82,7 @@ export class CoinMarketCapService {
       .pipe(
         catchError((error) => {
           console.error('Error fetching cryptocurrency data:', error);
-          return of({ data: [] }); // Return an empty array on error
+          return of({ data: [] });
         })
       );
   }

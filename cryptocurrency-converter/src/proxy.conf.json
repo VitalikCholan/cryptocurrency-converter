@@ -1,7 +1,7 @@
 {
   "/v1": {
     "target": "https://pro-api.coinmarketcap.com",
-    "secure": false,
+    "secure": true,
     "changeOrigin": true
   }
 }
