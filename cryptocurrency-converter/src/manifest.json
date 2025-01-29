@@ -5,9 +5,12 @@
   "version": "1.0",
   "action": {
     "default_popup": "index.html",
-    "default_title": "Crypto Converter"
+    "default_title": "Crypto Converter",
+    "default_icon": {
+      "48": "assets/icons/icon48.png"
+    }
   },
-  "permissions": ["activeTab"],
+  "permissions": ["activeTab", "storage"],
   "icons": {
     "48": "assets/icons/icon48.png"
   }
