@@ -3,6 +3,16 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, Observable, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+declare global {
+  interface Window {
+    chrome: {
+      runtime: {
+        id: string;
+      };
+    };
+  }
+}
+
 interface CryptoData {
   [key: string]: string | number;
   convert: string;
@@ -48,9 +58,7 @@ export class CoinMarketCapService {
   constructor(private http: HttpClient) {
     // Check if running as extension
     const isExtension =
-      (window as any).chrome &&
-      (window as any).chrome.runtime &&
-      (window as any).chrome.runtime.id;
+      window.chrome && window.chrome.runtime && window.chrome.runtime.id;
     if (isExtension) {
       this.apiCryptoUrl = `${this.baseUrl}/v1/cryptocurrency/listings/latest`;
       this.apiFiatUrl = `${this.baseUrl}/v1/fiat/map`;
