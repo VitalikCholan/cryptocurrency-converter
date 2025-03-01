@@ -28,20 +28,11 @@
                 "glob": "manifest.json",
                 "input": "src",
                 "output": "/"
-              },
-              {
-                "glob": "**/*",
-                "input": "src/assets",
-                "output": "/browser/assets"
-              },
-              {
-                "glob": "manifest.json",
-                "input": "src",
-                "output": "/browser"
               }
             ],
             "styles": ["src/styles.css"],
             "scripts": [],
+            "extractLicenses": false,
             "optimization": {
               "scripts": true,
               "styles": {
@@ -66,6 +57,7 @@
                 }
               ],
               "outputHashing": "none",
+              "extractLicenses": false,
               "optimization": {
                 "scripts": true,
                 "styles": {

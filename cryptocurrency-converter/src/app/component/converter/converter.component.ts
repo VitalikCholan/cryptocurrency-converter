@@ -21,6 +21,7 @@ interface FiatCurrency {
   selector: 'app-converter',
   standalone: true,
   imports: [DecimalPipe, FormsModule, CommonModule],
+  providers: [CoinMarketCapService],
   templateUrl: './converter.component.html',
   styleUrls: ['./converter.component.css'],
 })

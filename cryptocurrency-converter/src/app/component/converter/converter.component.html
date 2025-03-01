@@ -6,6 +6,7 @@
       [value]="cryptoQuantity"
       (input)="onQuantityChange($event)"
       class="quantity-crypto"
+      placeholder="Enter amount"
     />
     <input
       type="text"
@@ -91,4 +92,10 @@
     </select>
     <span class="custom-arrow-fiat"></span>
   </div>
+
+  @if(isLoading) {
+  <div class="loading-message">Loading cryptocurrency data...</div>
+  } @if(errorMessage) {
+  <div class="error-message">{{ errorMessage }}</div>
+  }
 </form>
