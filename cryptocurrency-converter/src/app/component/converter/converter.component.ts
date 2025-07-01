@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { CoinMarketCapService } from '../service/coin-market-cap.service';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CoinMarketCapService } from '../service/coin-market-cap/coin-market-cap.service';
+import { SearchService } from '../service/search/search.service';
+import { PriceCalculatorService } from '../service/price-calculator/price-calculator.service';
+import { ConverterStateService } from '../service/converter-state/converter-state.service';
 import { DecimalPipe, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { of, Subject } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import { FiatCurrency } from '../../models/FiatCurrency.interface';
 import { Quote } from '../../models/Quote.type';
 
@@ -11,244 +13,236 @@ import { Quote } from '../../models/Quote.type';
   selector: 'app-converter',
   standalone: true,
   imports: [DecimalPipe, FormsModule, CommonModule],
-  providers: [CoinMarketCapService],
   templateUrl: './converter.component.html',
   styleUrls: ['./converter.component.css'],
 })
-export class ConverterComponent implements OnInit {
+export class ConverterComponent implements OnInit, OnDestroy {
+  // Data properties
   cryptoData: { name: string; symbol: string; quote: Quote }[] = [];
   cryptoDataMap: Map<string, { name: string; symbol: string; quote: Quote }> =
     new Map();
-  selectedSymbol: string = '';
-  cryptoQuantity: number = 1;
-  calculatedPrice: number = 0;
-  searchCryptoTerm: string = '';
-  searchCryptoSubject: Subject<string> = new Subject<string>();
-  errorMessage: string = '';
   fiatCurrencies: FiatCurrency[] = [];
   filteredFiats: FiatCurrency[] = [];
-  selectedFiat: string = 'USD';
+
+  // UI state properties
+  searchCryptoTerm: string = '';
   searchFiatTerm: string = '';
-  searchFiatSubject: Subject<string> = new Subject<string>();
   errorFiatMessage: string = '';
 
-  isLoading: boolean = false;
+  // State management
+  state$!: Observable<any>; // Add this property declaration
 
-  constructor(private coinMarketCapService: CoinMarketCapService) {}
+  private destroy$ = new Subject<void>();
 
-  ngOnInit(): void {
-    // Set up the search subject to handle debouncing and dynamic fetching
-    this.searchCryptoSubject
-      .pipe(
-        debounceTime(300), // wait for 300ms pause in events
-        distinctUntilChanged() // only emit if value is different from before
-      )
-      .subscribe((searchCryptoTerm: string) => {
-        if (searchCryptoTerm) {
-          this.fetchCryptoData(searchCryptoTerm);
-        }
-      });
-
-    this.searchFiatSubject
-      .pipe(
-        debounceTime(300), // wait for 300ms pause in events
-        distinctUntilChanged() // only emit if value is different from before
-      )
-      .subscribe((searchFiatTerm: string) => {
-        if (searchFiatTerm) {
-          this.fetchFiatCurrencies();
-        }
-      });
-
-    this.fetchCryptoData();
-
-    this.fetchFiatCurrencies();
+  constructor(
+    private coinMarketCapService: CoinMarketCapService,
+    private searchService: SearchService,
+    private priceCalculator: PriceCalculatorService,
+    private stateService: ConverterStateService
+  ) {
+    // Initialize state$ in constructor
+    this.state$ = this.stateService.state$;
   }
 
+  ngOnInit(): void {
+    this.setupSearchSubscriptions();
+    this.loadInitialData();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // UI Event Handlers (Single Responsibility: Handle UI events)
   onCryptoChange(event: Event): void {
-    const element = event.target as HTMLSelectElement;
-    this.selectedSymbol = element.value;
-    this.updatePrice(); // This method will now be responsible for updating the price.
+    const symbol = (event.target as HTMLSelectElement).value;
+    this.stateService.updateState({ selectedCrypto: symbol });
+    this.updatePrice();
   }
 
   onQuantityChange(event: Event): void {
-    const inputElement = event.target as HTMLInputElement;
-    this.cryptoQuantity = +inputElement.value; // Convert value to number
+    const quantity = +(event.target as HTMLInputElement).value;
+    this.stateService.updateState({ quantity });
     this.updatePrice();
   }
 
   onPriceChange(event: Event): void {
-    const inputElement = event.target as HTMLInputElement;
-    const newPrice = +inputElement.value;
-
-    if (this.selectedSymbol && this.selectedFiat) {
-      // Find the selected cryptocurrency
-      const selectedCrypto = this.cryptoData.find(
-        (crypto) => crypto.symbol === this.selectedSymbol
-      );
-
-      if (selectedCrypto && selectedCrypto.quote[this.selectedFiat]) {
-        // Get the price per unit in the selected fiat currency
-        const pricePerUnit = selectedCrypto.quote[this.selectedFiat].price || 0;
-
-        if (pricePerUnit > 0) {
-          // Calculate the crypto quantity based on the price input
-          this.cryptoQuantity = newPrice / pricePerUnit;
-        } else {
-          this.cryptoQuantity = 0; // If no valid price, set quantity to 0
-        }
-
-        // Update calculatedPrice to reflect the current crypto quantity
-        this.calculatedPrice = this.cryptoQuantity * pricePerUnit;
-      }
-    }
+    const price = +(event.target as HTMLInputElement).value;
+    this.calculateQuantityFromPrice(price);
   }
 
-  updatePrice(): void {
-    const selectedCrypto = this.cryptoData.find(
-      (crypto) => crypto.symbol === this.selectedSymbol
-    );
-
-    if (
-      selectedCrypto &&
-      selectedCrypto.quote &&
-      selectedCrypto.quote[this.selectedFiat]
-    ) {
-      const price = selectedCrypto.quote[this.selectedFiat].price || 0;
-      this.calculatedPrice = price * this.cryptoQuantity;
-    } else {
-      this.calculatedPrice = 0;
-    }
+  onSearchTermChange(): void {
+    this.searchService.updateCryptoSearch(this.searchCryptoTerm);
   }
 
-  filteredCryptos() {
-    if (!this.searchCryptoTerm) {
-      return Array.from(this.cryptoDataMap.values()).slice(0, 4); // Return first 4 by default
-    }
-
-    const searchCryptoTermLower = this.searchCryptoTerm.toLowerCase();
-    // Filter the Map by name or symbol
-    const filtered = Array.from(this.cryptoDataMap.values()).filter(
-      (crypto) =>
-        crypto.name.toLowerCase().includes(searchCryptoTermLower) ||
-        crypto.symbol.toLowerCase().includes(searchCryptoTermLower)
-    );
-
-    if (filtered.length === 0) {
-      this.errorMessage = 'No crypto found';
-    }
-
-    return filtered.slice(0, 4);
+  onSearchFiatChange(): void {
+    this.searchService.updateFiatSearch(this.searchFiatTerm);
   }
 
   onFiatChange(event: Event): void {
-    const element = event.target as HTMLSelectElement;
-    this.selectedFiat = element.value;
-    this.isLoading = true;
-    this.fetchCryptoData(this.searchCryptoTerm);
-    this.updatePrice();
+    const fiat = (event.target as HTMLSelectElement).value;
+    this.stateService.updateState({ selectedFiat: fiat });
+    this.refreshCryptoData();
   }
 
-  fetchCryptoData(searchCryptoTerm: string = ''): void {
-    this.isLoading = true;
+  switchConversionValues(): void {
+    const state = this.stateService.getState();
+    this.stateService.updateState({
+      selectedCrypto: state.selectedFiat,
+      selectedFiat: state.selectedCrypto,
+      quantity: state.calculatedPrice,
+      calculatedPrice: state.quantity,
+    });
+  }
+
+  // Private Methods (Single Responsibility: Coordinate between services)
+  private setupSearchSubscriptions(): void {
+    this.searchService.cryptoSearch$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((term) => {
+        if (term) {
+          this.fetchCryptoData(term);
+        }
+      });
+
+    this.searchService.fiatSearch$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.filterFiatCurrencies();
+      });
+  }
+
+  private loadInitialData(): void {
+    this.fetchCryptoData();
+    this.fetchFiatCurrencies();
+  }
+
+  private updatePrice(): void {
+    const state = this.stateService.getState();
+    const selectedCrypto = this.cryptoData.find(
+      (crypto) => crypto.symbol === state.selectedCrypto
+    );
+
+    const calculatedPrice = this.priceCalculator.calculatePrice(
+      selectedCrypto,
+      state.selectedFiat,
+      state.quantity
+    );
+
+    this.stateService.updateState({ calculatedPrice });
+  }
+
+  private calculateQuantityFromPrice(price: number): void {
+    const state = this.stateService.getState();
+    const selectedCrypto = this.cryptoData.find(
+      (crypto) => crypto.symbol === state.selectedCrypto
+    );
+
+    const quantity = this.priceCalculator.calculateQuantity(
+      price,
+      selectedCrypto,
+      state.selectedFiat
+    );
+
+    this.stateService.updateState({ quantity, calculatedPrice: price });
+  }
+
+  private fetchCryptoData(searchTerm: string = ''): void {
+    this.stateService.updateState({ isLoading: true, errorMessage: '' });
+
+    const state = this.stateService.getState();
     const params = {
       start: 1,
       limit: '100',
-      convert: this.selectedFiat,
+      convert: state.selectedFiat,
       sort: 'market_cap',
     };
 
     this.coinMarketCapService.getCryptoData(params).subscribe({
       next: (response) => {
         this.cryptoData = response.data || [];
-
-        if (searchCryptoTerm) {
-          this.cryptoData = this.cryptoData.filter(
-            (crypto) =>
-              crypto.name
-                .toLowerCase()
-                .includes(searchCryptoTerm.toLowerCase()) ||
-              crypto.symbol
-                .toLowerCase()
-                .includes(searchCryptoTerm.toLowerCase())
-          );
-        }
-
-        // Create a Map for faster lookup
-        this.cryptoDataMap.clear(); // Clear the previous data
-        this.cryptoData.forEach((crypto) => {
-          this.cryptoDataMap.set(crypto.symbol, crypto);
-        });
-
-        this.errorMessage = '';
-
+        this.filterCryptoData(searchTerm);
+        this.updateCryptoDataMap();
         this.updatePrice();
-
-        this.isLoading = false;
+        this.stateService.updateState({ isLoading: false });
       },
       error: (error) => {
         console.error('Error fetching crypto data:', error);
-        this.errorMessage = 'Failed to load cryptocurrency data';
-        this.isLoading = false;
+        this.stateService.updateState({
+          isLoading: false,
+          errorMessage: 'Failed to load cryptocurrency data',
+        });
       },
     });
   }
 
-  fetchFiatCurrencies(): void {
+  private filterCryptoData(searchTerm: string): void {
+    if (searchTerm) {
+      this.cryptoData = this.cryptoData.filter(
+        (crypto) =>
+          crypto.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          crypto.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+  }
+
+  private updateCryptoDataMap(): void {
+    this.cryptoDataMap.clear();
+    this.cryptoData.forEach((crypto) => {
+      this.cryptoDataMap.set(crypto.symbol, crypto);
+    });
+  }
+
+  private fetchFiatCurrencies(): void {
     const params = {
       start: 1,
       limit: '10',
       sort: 'id',
       include_metals: true,
     };
-    this.coinMarketCapService
-      .getFiatData(params)
-      .pipe(
-        catchError((error) => {
-          console.error(error);
-          return of({ data: [] });
-        })
-      )
-      .subscribe((response) => {
+
+    this.coinMarketCapService.getFiatData(params).subscribe({
+      next: (response) => {
         this.fiatCurrencies = response.data || [];
         this.filteredFiats = this.fiatCurrencies.slice(0, 4);
-      });
+      },
+      error: (error) => {
+        console.error('Error fetching fiat data:', error);
+        this.errorFiatMessage = 'Failed to load fiat currencies';
+      },
+    });
   }
 
-  filterFiatCurrencies(): void {
-    const searchFiatLower = this.searchFiatTerm.toLowerCase();
+  private filterFiatCurrencies(): void {
+    const searchLower = this.searchFiatTerm.toLowerCase();
     this.filteredFiats = this.fiatCurrencies.filter(
       (fiat) =>
-        fiat.name.toLowerCase().includes(searchFiatLower) ||
-        fiat.symbol.toLowerCase().includes(searchFiatLower)
+        fiat.name.toLowerCase().includes(searchLower) ||
+        fiat.symbol.toLowerCase().includes(searchLower)
     );
 
-    if (this.filteredFiats.length === 0) {
-      this.errorFiatMessage = 'No fiat currencies found.';
-    } else {
-      this.errorFiatMessage = '';
+    this.errorFiatMessage =
+      this.filteredFiats.length === 0 ? 'No fiat currencies found' : '';
+  }
+
+  private refreshCryptoData(): void {
+    this.fetchCryptoData(this.searchCryptoTerm);
+  }
+
+  // Public methods for template
+  filteredCryptos() {
+    if (!this.searchCryptoTerm) {
+      return Array.from(this.cryptoDataMap.values()).slice(0, 4);
     }
-  }
 
-  onSearchFiatChange(): void {
-    this.filterFiatCurrencies(); // Emit value to Subject
-  }
+    const searchLower = this.searchCryptoTerm.toLowerCase();
+    const filtered = Array.from(this.cryptoDataMap.values()).filter(
+      (crypto) =>
+        crypto.name.toLowerCase().includes(searchLower) ||
+        crypto.symbol.toLowerCase().includes(searchLower)
+    );
 
-  onSearchTermChange(): void {
-    this.searchCryptoSubject.next(this.searchCryptoTerm);
-  }
-
-  switchConversionValues(): void {
-    const tempFiat = this.selectedFiat;
-    const tempCrypto = this.selectedSymbol;
-
-    this.selectedFiat = tempCrypto;
-    this.selectedSymbol = tempFiat;
-
-    const tempQuantity = this.cryptoQuantity;
-    this.cryptoQuantity = this.calculatedPrice;
-    this.calculatedPrice = tempQuantity;
-
-    this.updatePrice();
+    return filtered.slice(0, 4);
   }
 }

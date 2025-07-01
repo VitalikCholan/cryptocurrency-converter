@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, Observable, of } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { FiatParameters } from '../../models/FiatParameters';
-import { FiatData } from '../../models/FiatData';
-import { CryptoData } from '../../models/CryptoData';
-import { CryptoResponseData } from '../../models/CryptoResponseData';
+import { environment } from '../../../../environments/environment';
+import { FiatParameters } from '../../../models/FiatParameters';
+import { FiatData } from '../../../models/FiatData';
+import { CryptoData } from '../../../models/CryptoData';
+import { CryptoResponseData } from '../../../models/CryptoResponseData';
 
 @Injectable({
   providedIn: 'root',
