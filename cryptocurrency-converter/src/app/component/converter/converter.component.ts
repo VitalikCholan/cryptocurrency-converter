@@ -4,18 +4,8 @@ import { DecimalPipe, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { of, Subject } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged } from 'rxjs/operators';
-
-type Quote = {
-  [key: string]: {
-    price: number;
-  };
-};
-
-interface FiatCurrency {
-  id: number;
-  name: string;
-  symbol: string;
-}
+import { FiatCurrency } from '../../models/FiatCurrency.interface';
+import { Quote } from '../../models/Quote.type';
 
 @Component({
   selector: 'app-converter',

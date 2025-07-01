@@ -6,7 +6,7 @@ import { ConverterComponent } from './component/converter/converter.component';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent, ConverterComponent],
+  imports: [HeaderComponent, ConverterComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })

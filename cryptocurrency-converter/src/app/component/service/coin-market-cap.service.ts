@@ -2,50 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, Observable, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { FiatParameters } from '../../models/FiatParameters';
+import { FiatData } from '../../models/FiatData';
+import { CryptoData } from '../../models/CryptoData';
+import { CryptoResponseData } from '../../models/CryptoResponseData';
 
-declare global {
-  interface Window {
-    chrome: {
-      runtime: {
-        id: string;
-      };
-    };
-  }
-}
-
-interface CryptoData {
-  [key: string]: string | number;
-  convert: string;
-  limit: string;
-  sort: string;
-  start: number;
-}
-
-interface CryptoResponseData {
-  name: string;
-  symbol: string;
-  quote: Quote;
-}
-
-interface Quote {
-  [key: string]: {
-    price: number;
-  };
-}
-
-interface FiatData {
-  id: number;
-  name: string;
-  symbol: string;
-}
-
-interface FiatParameters {
-  [key: string]: string | number | boolean;
-  include_metals: boolean;
-  limit: string;
-  sort: string;
-  start: number;
-}
 @Injectable({
   providedIn: 'root',
 })
