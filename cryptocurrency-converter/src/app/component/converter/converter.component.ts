@@ -19,7 +19,6 @@ export class ConverterComponent implements OnInit {
   cryptoData: { name: string; symbol: string; quote: Quote }[] = [];
   cryptoDataMap: Map<string, { name: string; symbol: string; quote: Quote }> =
     new Map();
-  selectedCryptos: string[] = [];
   selectedSymbol: string = '';
   cryptoQuantity: number = 1;
   calculatedPrice: number = 0;
@@ -115,11 +114,9 @@ export class ConverterComponent implements OnInit {
       selectedCrypto.quote &&
       selectedCrypto.quote[this.selectedFiat]
     ) {
-      // Only access the price if selectedCrypto, quote, and the selectedFiat exist
       const price = selectedCrypto.quote[this.selectedFiat].price || 0;
       this.calculatedPrice = price * this.cryptoQuantity;
     } else {
-      // Handle cases where selectedCrypto or quote for the selected fiat does not exist
       this.calculatedPrice = 0;
     }
   }
@@ -153,6 +150,7 @@ export class ConverterComponent implements OnInit {
   }
 
   fetchCryptoData(searchCryptoTerm: string = ''): void {
+    this.isLoading = true;
     const params = {
       start: 1,
       limit: '100',
@@ -160,30 +158,39 @@ export class ConverterComponent implements OnInit {
       sort: 'market_cap',
     };
 
-    this.coinMarketCapService.getCryptoData(params).subscribe((response) => {
-      this.cryptoData = response.data || [];
+    this.coinMarketCapService.getCryptoData(params).subscribe({
+      next: (response) => {
+        this.cryptoData = response.data || [];
 
-      if (searchCryptoTerm) {
-        this.cryptoData = this.cryptoData.filter(
-          (crypto) =>
-            crypto.name
-              .toLowerCase()
-              .includes(searchCryptoTerm.toLowerCase()) ||
-            crypto.symbol.toLowerCase().includes(searchCryptoTerm.toLowerCase())
-        );
-      }
+        if (searchCryptoTerm) {
+          this.cryptoData = this.cryptoData.filter(
+            (crypto) =>
+              crypto.name
+                .toLowerCase()
+                .includes(searchCryptoTerm.toLowerCase()) ||
+              crypto.symbol
+                .toLowerCase()
+                .includes(searchCryptoTerm.toLowerCase())
+          );
+        }
 
-      // Create a Map for faster lookup
-      this.cryptoDataMap.clear(); // Clear the previous data
-      this.cryptoData.forEach((crypto) => {
-        this.cryptoDataMap.set(crypto.symbol, crypto);
-      });
+        // Create a Map for faster lookup
+        this.cryptoDataMap.clear(); // Clear the previous data
+        this.cryptoData.forEach((crypto) => {
+          this.cryptoDataMap.set(crypto.symbol, crypto);
+        });
 
-      this.errorMessage = '';
+        this.errorMessage = '';
 
-      this.updatePrice();
+        this.updatePrice();
 
-      this.isLoading = false;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error fetching crypto data:', error);
+        this.errorMessage = 'Failed to load cryptocurrency data';
+        this.isLoading = false;
+      },
     });
   }
 
@@ -233,14 +240,14 @@ export class ConverterComponent implements OnInit {
 
   switchConversionValues(): void {
     const tempFiat = this.selectedFiat;
-    const tempCrypto = this.selectedCryptos[0];
+    const tempCrypto = this.selectedSymbol;
 
-    this.selectedFiat = tempCrypto; // Assign the first crypto as the new fiat
-    this.selectedCryptos = [tempFiat]; // Assign the old fiat as the selected crypto
+    this.selectedFiat = tempCrypto;
+    this.selectedSymbol = tempFiat;
 
     const tempQuantity = this.cryptoQuantity;
-    this.cryptoQuantity = this.calculatedPrice; // Old price becomes new quantity
-    this.calculatedPrice = tempQuantity; // Old quantity becomes new price
+    this.cryptoQuantity = this.calculatedPrice;
+    this.calculatedPrice = tempQuantity;
 
     this.updatePrice();
   }

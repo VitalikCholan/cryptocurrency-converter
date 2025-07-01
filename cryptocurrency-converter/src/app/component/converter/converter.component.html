@@ -93,9 +93,11 @@
     <span class="custom-arrow-fiat"></span>
   </div>
 
-  @if(isLoading) {
-  <div class="loading-message">Loading cryptocurrency data...</div>
-  } @if(errorMessage) {
-  <div class="error-message">{{ errorMessage }}</div>
-  }
+  <div class="converter-container">
+    @if(isLoading) {
+    <div class="loading">Loading cryptocurrency data...</div>
+    } @if(errorMessage) {
+    <div class="error">{{ errorMessage }}</div>
+    }
+  </div>
 </form>
